@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://unpkg.com/htmx.org@1.x.x"></script>
+        <script src="https://unpkg.com/htmx.org@1.x.x/dist/ext/client-side-templates.js"></script>
+        <script src="https://unpkg.com/hyperscript.org@0.x.x"></script>
+        <script src="https://unpkg.com/mustache@4.x.x"></script>
+        <script src="https://unpkg.com/nunjucks@3.x.x"></script>
+    </head>
+    <body>
+        {# Stripe - Example with &lt;/&gt; htmx #}
+
+        <div hx-ext="client-side-templates">
+            <button type="button"
+                    class="rounded bg-indigo-50 px-2 py-1 text-xs font-semibold text-indigo-600 shadow-sm hover:bg-indigo-100"
+                    hx-get="https://jsonplaceholder.typicode.com/todos/1"
+                    hx-swap="innerHTML"
+                    hx-target="#content"
+                    nunjucks-template="foo">
+                Click Me
+            </button>
+
+            <div id="content">
+                Start
+            </div>
+
+            {% raw %}
+                <template id="foo">
+                    <p>
+                        {% if id == 1 %}
+                            id is 1
+                        {% else %}
+                            id is NOT 1
+                        {% endif %}
+                    </p>
+                    <p>
+                        id: {{ id }}
+                    </p>
+                    <p>
+                        title: {{ title }}
+                    </p>
+                </template>
+            </div>
+        {% endraw %}
+
+        <div class="my-8" hx-ext="client-side-templates">
+            <button type="button"
+                    class="rounded bg-indigo-50 px-2 py-1 text-xs font-semibold text-indigo-600 shadow-sm hover:bg-indigo-100"
+                    hx-get="https://jsonplaceholder.typicode.com/users"
+                    hx-swap="innerHTML"
+                    hx-target="#content1"
+                    mustache-array-template="foo1">
+                Click Me
+            </button>
+
+            <p id="content1">
+                Start
+            </p>
+
+            {% raw %}
+                <template id="foo1">
+                    {{#data}}
+                    <p>
+                        {{ name }} at {{ email }} is with {{ company.name }}
+                    </p>
+                {{/data}}
+            </template>
+        {% endraw %}
+    </div>
+
+    <div hx-ext="client-side-templates">
+        <button type="button"
+                class="rounded bg-indigo-50 px-2 py-1 text-xs font-semibold text-indigo-600 shadow-sm hover:bg-indigo-100"
+                hx-get="https://jsonplaceholder.typicode.com/todos/1"
+                hx-swap="innerHTML"
+                hx-target="#content2"
+                mustache-template="foo2">
+            Click Me
+        </button>
+
+        <p id="content2">
+            Start
+        </p>
+
+        <template id="foo2">
+            <p>
+                {% raw %}
+                    {{ userId }}
+                {% endraw %}
+                and
+                {% raw %}
+                    {{ id }}
+                {% endraw %}
+                and
+                {% raw %}
+                    {{ title }}
+                {% endraw %}
+                and
+                {% raw %}
+                    {{ completed }}
+                {% endraw %}
+            </p>
+        </template>
+    </div>
+</body>
+</html>
