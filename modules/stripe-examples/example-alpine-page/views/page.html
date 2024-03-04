@@ -16,7 +16,8 @@
                 theme: {
                     extend: {
                         fontSize: {
-                            xxs: ['0.625rem', '0.875rem']
+                            '2xs': ['0.625rem', '0.875rem'],
+                            '3xs': ['0.5rem', '0.75rem']
                         },
                         spacing: {
                             '4.5': '1.125rem'
@@ -57,14 +58,23 @@
                 font-weight: 700;
             }
         </style>
-        {# <style type="text/tailwindcss">
-            @layer utilities {
-                .text-xxs {
-                    font-size: 0.625rem;
-                    line-height: 0.875rem;
-                }
+        <style type="text/tailwindcss">
+            [x-cloak] {
+                opacity: 0;
             }
-        </style> #}
+        </style>
+        <style>
+            input::-webkit-outer-spin-button,
+            input::-webkit-inner-spin-button {
+                display: none;
+                -webkit-appearance: none;
+                margin: 0;
+            }
+
+            input[type=number] {
+                -moz-appearance: textfield;
+            }
+        </style>
         <script>
             document.addEventListener('alpine:init', () => {
                 Alpine.data('checkout', () => ({
@@ -79,7 +89,7 @@
                     productDetailId: null,
                     productDetailOpen: false,
                     get productDetail() {
-                        return this.products.find(product => product._id === this.productDetailId)
+                        return this.products.find(product => product.stripeProductObject.id === this.productDetailId)
                     },
                     basketOpen: false,
                     basket: [],
@@ -87,12 +97,12 @@
                         return this.basket.reduce((total, item) => total + item.quantity, 0)
                     },
                     addBasketItem(productId) {
-                        if (this.basket.length > 0 && this.basket.some(item => item.productId === productId)) {
-                            this.basket.find(item => item.productId === productId).quantity++
+                        if (this.basket.some(item => item.stripeProductObject.id === productId)) {
+                            this.basket.find(item => item.stripeProductObject.id === productId).quantity++
                         } else {
                             this.basket.push({
-                                productId: productId,
-                                priceId: this.basket.find(item => item.productId === productId).stripePriceObject.id,
+                                stripeProductObject: this.products.find(item => item.stripeProductObject.id === productId).stripeProductObject,
+                                stripePriceObject: this.products.find(item => item.stripeProductObject.id === productId).stripePriceObject,
                                 quantity: 1
                             })
                         }
@@ -101,8 +111,10 @@
             })
         </script>
     </head>
-    <body class="flex flex-col flex-grow gap-y-8 bg-slate-200 p-8 h-screen font-['Open_Runde'] text-slate-800 overscroll-none"
-          x-data="checkout">
+    <body class="flex flex-col flex-grow gap-y-8 bg-slate-200 p-8 h-screen font-['Open_Runde'] text-slate-800 transition-opacity duration-200 ease-linear overscroll-none"
+          x-data="checkout"
+          x-cloak>
+        {# Header #}
         <div class="relative z-[5] flex items-center bg-white py-1.5 pr-1.5 pl-3.5 rounded-full">
             <div class="flex flex-1 justify-start items-center">
                 <p class="border-slate-300 py-1.5 pr-5 pl-4 border rounded-full text-slate-600 text-xs">
@@ -122,12 +134,13 @@
                     </path>
                 </svg>
             </div>
+            {# Basket #}
             <div class="flex flex-1 justify-end items-center" id="basket">
                 <button class="inline-flex items-center gap-x-3 bg-slate-100 hover:bg-slate-200 py-1.5 pr-1.5 pl-3.5 rounded-full transition-background duration-100 ease-linear group"
                         type="menu"
                         title="Open basket"
                         x-on:click="basketOpen = true">
-                    <span class="text-sm transition-[text-decoration-color] duration-100 decoration-transparent hover:decoration-slate-500 underline underline-offset-4"
+                    <span class="font-semibold text-slate-600 text-sm transition-[text-decoration-color] underline underline-2 underline-offset-4 duration-100 ease-linear decoration-transparent hover:decoration-slate-400"
                           x-text="`Basket (${basketTotal})`"></span>
                     <span class="group-hover:bg-slate-600 bg-slate-500 p-2 material-symbols-rounded rounded-full text-base text-white leading-none transition-background duration-100 ease-linear select-none">
                         shopping_basket
@@ -139,9 +152,9 @@
                      style="display: none">
                     <div class="fixed inset-0 bg-slate-900 bg-opacity-45"
                          x-dialog:overlay
-                         x-transition.opacity.duration.150ms>
+                         x-transition.opacity.duration.150ms.ease.linear>
                     </div>
-                    <div class="right-0 fixed inset-y-0 p-8 w-full max-w-lg">
+                    <div class="right-0 fixed inset-y-0 p-8 w-full max-w-2xl">
                         <div class="flex flex-grow items-center gap-x-4 h-full"
                              x-dialog:panel
                              x-transition:enter="transition ease-out duration-150 origin-center"
@@ -156,26 +169,63 @@
                                         title="Close basket"
                                         @click="$dialog.close()">
                                     <span class="sr-only">Close slideover</span>
-                                    <span class="group-hover:bg-slate-600 bg-slate-500 px-1.5 py-9 material-symbols-rounded rounded-full text-white text-xl leading-none transition-background duration-100 select-none">collapse_content</span>
+                                    <span class="group-hover:bg-slate-600 bg-slate-500 px-1.5 py-9 material-symbols-rounded rounded-full text-white text-xl leading-none transition-background duration-100 ease-linear select-none">collapse_content</span>
                                 </button>
                             </div>
                             <div class="flex flex-col flex-grow justify-between bg-white rounded-3xl h-full overflow-y-auto">
                                 <div class="flex flex-col flex-grow justify-between p-2.5">
-                                    <div class="flex flex-col">
-                                        <div class="flex justify-between items-center mt-6 px-4">
-                                            <h2 class="font-semibold text-lg" x-dialog:title>
+                                    <div class="flex flex-col px-4">
+                                        <div class="flex justify-between items-center mt-6">
+                                            <h2 class="font-semibold text-lg text-slate-600" x-dialog:title>
                                                 Basket
                                             </h2>
                                             <p class="text-slate-600" x-text="`${basket.length} items`">
                                             </p>
                                         </div>
-                                        <div class="">
-
+                                        <div class="flex flex-col mt-6">
+                                            <template x-for="basketItem in basket">
+                                                <div class="flex gap-x-2 border-slate-300 p-2 border rounded-xl">
+                                                    <img class="rounded-lg h-16 aspect-square object-center object-cover"
+                                                         :src="basketItem.stripeProductObject.images[0]">
+                                                    <div class="flex flex-col flex-grow justify-between">
+                                                        <h4 x-text="basketItem.stripeProductObject.name"
+                                                            class="font-semibold text-xs transition-[text-decoration-color] underline underline-offset-2 duration-100 ease-linear cursor-pointer decoration-transparent hover:decoration-slate-500"
+                                                            x-on:click="$dialog.close(); productDetailOpen = true; productDetailId = basketItem.stripeProductObject.id"
+                                                            tabindex="0">
+                                                        </h4>
+                                                        <div class="flex flex-col items-start gap-y-[0.1875rem] mt-3">
+                                                        <p class="inline-flex gap-x-1 border-slate-400 px-1.5 border rounded-full font-semibold text-3xs text-center text-slate-500 tracking-wide">
+                                                            <span x-text="basketItem.stripeProductObject.type" class="uppercase"></span>
+                                                        </p>
+                                                        <p class="inline-flex gap-x-1 border-slate-400 px-1.5 border rounded-full font-semibold text-3xs text-center text-slate-500 tracking-wide">
+                                                            <span x-text="basketItem.stripePriceObject.type" class="uppercase"></span>
+                                                        </p>
+                                                    </div>
+                                                    </div>
+                                                    <div class="flex items-center gap-x-2">
+                                                        <div class="flex items-center">
+                                                            <button class="flex bg-slate-200 p-1 rounded aspect-square">
+                                                                <span class="material-symbols-rounded font-semibold text-slate-600 text-xs leading-none">
+                                                                    remove
+                                                                </span>
+                                                            </button>
+                                                            <input value="1" class="w-12 text-center" type="number">
+                                                            <button class="flex bg-slate-200 p-1 rounded aspect-square">
+                                                                <span class="material-symbols-rounded font-semibold text-slate-600 text-xs leading-none">
+                                                                    add
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                        <div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </template>
                                         </div>
                                     </div>
-                                    <div class="bottom-0 sticky">
-                                        <div class="flex justify-end space-x-2 bg-slate-200 p-1.5 rounded-full">
-                                            <button class="bg-slate-600 hover:bg-slate-700 px-5 py-2.5 rounded-full text-white transition-background duration-100 ease-linear focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                                    <div class="bottom-0 sticky flex justify-end">
+                                        <div class="bg-slate-200 p-1.5 rounded-full">
+                                            <button class="bg-slate-500 hover:bg-slate-600 px-5 py-2.5 rounded-full text-white transition-background duration-100 ease-linear focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                                     type="button"
                                                     x-on:click="$dialog.close()">
                                                 Checkout with Stripe
@@ -189,29 +239,30 @@
                 </div>
             </div>
         </div>
+        {# Product list #}
         <div class="relative z-[1] flex flex-1">
             <div class="flex flex-grow bg-white p-3.5 rounded-3xl">
                 <div class="flex-grow gap-4 grid grid-cols-3 lg:grid-cols-4 grid-flow-col auto-rows-max">
                     <template x-for="product in products">
                         <button type="button"
-                                x-on:click="productDetailOpen = true; productDetailId = product._id"
+                                x-on:click="productDetailOpen = true; productDetailId = product.stripeProductObject.id"
                                 class="flex flex-col justify-between gap-y-6 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-2xl transition duration-150 ease-linear">
                             <div class="relative flex flex-col">
-                                <img class="rounded-xl w-full aspect-video object-cover"
+                                <img class="rounded-xl w-full aspect-video object-center object-cover"
                                      :src="product.stripeProductObject.images[0]">
                                 <p class="inline-flex top-0 right-0 absolute gap-x-1 bg-slate-100 bg-opacity-50 backdrop-blur mt-2 mr-2 px-2.5 py-1 rounded-full font-semibold text-center text-slate-800 text-xs text-opacity-80">
                                     <span x-text="product.stripePriceObject.unit_amount"></span>
                                     <span x-text="product.stripePriceObject.currency" class="uppercase"></span>
                                 </p>
-                                <h3 class="mt-4 text-left text-slate-600 text-xl transition-[text-decoration-color] underline-offset-4 duration-100 decoration-transparent hover:decoration-slate-500 underline self-start"
+                                <h3 class="mt-4 text-left text-slate-600 text-xl transition-[text-decoration-color] underline-offset-4 duration-100 ease-linear decoration-transparent hover:decoration-slate-500 underline self-start"
                                     x-text="product.stripeProductObject.name">
                                 </h3>
                             </div>
                             <div class="relative flex flex-col items-start gap-y-1">
-                                <p class="inline-flex gap-x-1 border-slate-400 px-2 py-0.5 border rounded-full font-semibold text-center text-slate-500 text-xxs">
+                                <p class="inline-flex gap-x-1 border-slate-400 px-2 py-0.5 border rounded-full font-semibold text-2xs text-center text-slate-500">
                                     <span x-text="product.stripeProductObject.type" class="uppercase"></span>
                                 </p>
-                                <p class="inline-flex gap-x-1 border-slate-400 px-2 py-0.5 border rounded-full font-semibold text-center text-slate-500 text-xxs">
+                                <p class="inline-flex gap-x-1 border-slate-400 px-2 py-0.5 border rounded-full font-semibold text-2xs text-center text-slate-500">
                                     <span x-text="product.stripePriceObject.type" class="uppercase"></span>
                                 </p>
                             </div>
@@ -219,13 +270,14 @@
                     </template>
                 </div>
             </div>
+            {# Product detail modal #}
             <div class="absolute inset-3.5 overflow-hidden"
                  x-dialog
                  x-model="productDetailOpen"
                  style="display: none">
                 <div class="fixed inset-0 bg-slate-900 bg-opacity-25"
                      x-dialog:overlay
-                     x-transition.opacity.duration.150ms>
+                     x-transition.opacity.duration.150ms.ease.linear>
                 </div>
                 <div class="absolute inset-0 w-full">
                     <div class="flex flex-grow items-center gap-x-4 h-full"
@@ -242,12 +294,12 @@
                                     title="Close basket"
                                     @click="$dialog.close()">
                                 <span class="sr-only">Close slideover</span>
-                                <span class="group-hover:bg-slate-600 bg-slate-500 px-1.5 py-9 material-symbols-rounded rounded-full text-white text-xl leading-none transition-background duration-100 select-none">collapse_content</span>
+                                <span class="group-hover:bg-slate-600 bg-slate-500 px-1.5 py-9 material-symbols-rounded rounded-full text-white text-xl leading-none transition-background duration-100 ease-linear select-none">collapse_content</span>
                             </button>
                         </div>
                         <div class="flex flex-col flex-grow justify-between bg-white rounded-2xl h-full overflow-y-auto">
                             <div class="flex flex-row gap-x-8 p-4.5">
-                                <img class="rounded-lg w-1/2 aspect-video object-cover"
+                                <img class="rounded-lg w-1/2 aspect-video object-center object-cover"
                                      :src="productDetail?.stripeProductObject.images[0]">
                                 <div class="flex flex-col items-start w-1/2">
                                     <h3 class="mt-4 text-3xl text-left text-slate-600"
@@ -263,7 +315,7 @@
                                 </div>
                             </div>
                             <div class="bottom-0 sticky p-4.5">
-                                <div class="flex justify-between items-center space-x-2 bg-slate-200 p-2 rounded-full">
+                                <div class="flex justify-between items-center space-x-2 bg-slate-200 p-1.5 rounded-full">
                                     <p class="inline-flex justify-center items-center gap-x-1 border-slate-400 px-4 py-2 border rounded-full font-semibold text-center text-slate-600">
                                         <span x-text="productDetail?.stripePriceObject.unit_amount"></span>
                                         <span x-text="productDetail?.stripePriceObject.currency" class="uppercase"></span>
