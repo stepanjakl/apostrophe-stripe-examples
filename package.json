@@ -1,19 +1,19 @@
 {
     "name": "@stepanjakl/apostrophe-stripe-examples",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "description": "Stripe Examples For ApostropheCMS",
     "keywords": [
         "apostrophe",
         "apostrophecms",
         "stripe"
     ],
-    "homepage": "https://github.com/stepanjakl/aapostrophe-stripe-examples#readme",
+    "homepage": "https://github.com/stepanjakl/apostrophe-stripe-examples#readme",
     "bugs": {
-        "url": "https://github.com/stepanjakl/aapostrophe-stripe-examples/issues"
+        "url": "https://github.com/stepanjakl/apostrophe-stripe-examples/issues"
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/stepanjakl/aapostrophe-stripe-examples.git"
+        "url": "git+https://github.com/stepanjakl/apostrophe-stripe-examples.git"
     },
     "license": "MIT",
     "author": "Štěpán Jákl",
