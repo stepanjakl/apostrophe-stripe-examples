@@ -20,8 +20,24 @@
                             '3xs': ['0.5rem', '0.75rem']
                         },
                         spacing: {
+                            '1.25': '0.3125rem',
                             '4.5': '1.125rem'
+                        },
+                        keyframes: {
+                            'bounce-2': {
+                                '0%, 100%': {
+                                    transform: 'translateY(0)',
+                                    'animation-timing-function': "cubic-bezier(0.8, 0, 1, 1)"
+                                },
+                                '50%': {
+                                    transform: 'translateY(-20%)',
+                                    'animation-timing-function': 'cubic-bezier(0, 0, 0.2, 1)'
+                                },
+                            }
                         }
+                    },
+                    animation: {
+                        'bounce-2': 'bounce-2 0.8s',
                     }
                 }
             }
@@ -81,7 +97,23 @@
                     products: [],
                     async init() {
                         await this.fetchProducts()
-                        console.log(this.products)
+
+                        if (localStorage.getItem('basket')) {
+                            this.basket = JSON.parse(localStorage.getItem('basket'))
+                        }
+
+                        this.$watch('basket', () => {
+                            localStorage.setItem('basket', JSON.stringify(this.basket))
+                        })
+
+                        this.$watch('productDetailOpen', (value) => {
+                            if (value) {
+                                this.adjustProductModalPosition()
+                            }
+                        })
+                    },
+                    adjustProductModalPosition() {
+                        this.$refs.productModal.style.top = `${window.scrollY + this.$refs.content.getBoundingClientRect().y}px`
                     },
                     async fetchProducts() {
                         this.products = (await (await fetch('/api/v1/stripe-products/product')).json()).results
@@ -93,10 +125,18 @@
                     },
                     basketOpen: false,
                     basket: [],
-                    get basketTotal() {
-                        return this.basket.reduce((total, item) => total + item.quantity, 0)
+                    get basketTotalQuantity() {
+                        return parseInt(this.basket.reduce((total, item) => total + parseInt(item.quantity), 0))
+                    },
+                    get basketTotalAmount() {
+                        return parseFloat(this.basket.reduce((total, item) => total + parseFloat(item.quantity * item.stripePriceObject.unit_amount), 0)).toFixed(2)
                     },
                     addBasketItem(productId) {
+                        this.$refs.basketIcon.classList.remove('animate-bounce-2')
+                        const _this = this
+                        window.requestAnimationFrame(function() {
+                            _this.$refs.basketIcon.classList.add('animate-bounce-2')
+                        })
                         if (this.basket.some(item => item.stripeProductObject.id === productId)) {
                             this.basket.find(item => item.stripeProductObject.id === productId).quantity++
                         } else {
@@ -106,22 +146,62 @@
                                 quantity: 1
                             })
                         }
+                    },
+                    findBasketItem(productId) {
+                        return this.basket.find(item => item.stripeProductObject.id === productId)
+                    },
+                    async checkoutWithStripe(dialog) {
+                        const _this = this
+                        try {
+                            const response = await fetch('/api/v1/stripe/checkout/sessions/create', {
+                                method: 'POST',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    line_items: this.basket.map(item => ({
+                                        price: item.stripePriceObject.id,
+                                        quantity: parseInt(item.quantity)
+                                    })),
+                                    success_url: window.location.href,
+                                    cancel_url: window.location.href
+                                })
+                            })
+
+                            if (response.ok) {
+                                const result = await response.text()
+                                console.log('-- checkoutWithStripe - success:', result)
+                                window.open(result, '_blank')
+                                dialog.close()
+                                window.requestAnimationFrame(function() {
+                                    _this.basket = []
+                                })
+                            } else {
+                                const error = await response.json()
+                                console.error('-- checkoutWithStripe - error:', error)
+                            }
+                        } catch (error) {
+                            console.error('-- checkoutWithStripe - exception:', error)
+                        }
                     }
                 }))
             })
         </script>
     </head>
-    <body class="flex flex-col flex-grow gap-y-8 bg-slate-200 p-8 h-screen font-['Open_Runde'] text-slate-800 transition-opacity duration-200 ease-linear overscroll-none"
+    <body class="flex flex-col flex-grow gap-y-2 sm:gap-y-4 md:gap-y-6 lg:gap-y-8 bg-slate-200 p-2 sm:p-4 md:p-6 lg:p-8 h-full min-h-screen font-['Open_Runde'] text-slate-800 transition-opacity duration-200 ease-linear overscroll-none"
           x-data="checkout"
+          x-on:resize.window="adjustProductModalPosition()"
           x-cloak>
         {# Header #}
-        <div class="relative z-[5] flex items-center bg-white py-1.5 pr-1.5 pl-3.5 rounded-full">
-            <div class="flex flex-1 justify-start items-center">
-                <p class="border-slate-300 py-1.5 pr-5 pl-4 border rounded-full text-slate-600 text-xs">
+        <div x-ref="header"
+             class="top-2 sm:top-4 md:top-6 lg:top-8 z-[5] sticky flex items-center bg-white py-1.5 pr-1.5 pl-3.5 rounded-full">
+            <div class="md:flex flex-1 justify-start items-center hidden">
+                <p class="border-slate-100 bg-slate-100 py-1.5 pr-5 pl-4 border rounded-full text-slate-600 text-xs">
                     Stripe Checkout - Example with Alpine.js
                 </p>
             </div>
-            <div class="flex flex-1 justify-center items-center">
+            <div class="flex justify-center items-center mx-1.5">
                 <svg class="text-slate-400"
                      role="img"
                      viewBox="0 0 24 24"
@@ -136,16 +216,17 @@
             </div>
             {# Basket #}
             <div class="flex flex-1 justify-end items-center" id="basket">
-                <button class="inline-flex items-center gap-x-3 bg-slate-100 hover:bg-slate-200 py-1.5 pr-1.5 pl-3.5 rounded-full transition-background duration-100 ease-linear group"
+                <button class="inline-flex items-center gap-x-3 border-slate-200 hover:border-slate-300 bg-slate-100 hover:bg-slate-200 py-1.5 pr-1.5 pl-3.5 border rounded-full transition-background duration-100 ease-linear group"
                         type="menu"
                         title="Open basket"
                         x-on:click="basketOpen = true">
-                    <span class="font-semibold text-slate-600 text-sm transition-[text-decoration-color] underline underline-2 underline-offset-4 duration-100 ease-linear decoration-transparent hover:decoration-slate-400"
-                          x-text="`Basket (${basketTotal})`"></span>
-                    <span class="group-hover:bg-slate-600 bg-slate-500 p-2 material-symbols-rounded rounded-full text-base text-white leading-none transition-background duration-100 ease-linear select-none">
+                    <span class="font-semibold text-slate-600 text-sm transition-[text-decoration-color] underline underline-2 underline-offset-4 duration-100 ease-linear decoration-transparent hover:decoration-slate-500"
+                          x-text="`Basket (${basketTotalQuantity})`"></span>
+                    <span x-ref="basketIcon" class="group-hover:bg-slate-600 bg-slate-500 p-2 material-symbols-rounded rounded-full text-base text-white leading-none transition-background duration-100 ease-linear select-none">
                         shopping_basket
                     </span>
                 </button>
+                {# Basket modal #}
                 <div class="z-[10] fixed inset-0 overflow-hidden"
                      x-dialog
                      x-model="basketOpen"
@@ -154,7 +235,7 @@
                          x-dialog:overlay
                          x-transition.opacity.duration.150ms.ease.linear>
                     </div>
-                    <div class="right-0 fixed inset-y-0 p-8 w-full max-w-2xl">
+                    <div class="right-0 fixed inset-y-0 p-2 sm:p-4 md:p-6 lg:p-8 w-full max-w-2xl">
                         <div class="flex flex-grow items-center gap-x-4 h-full"
                              x-dialog:panel
                              x-transition:enter="transition ease-out duration-150 origin-center"
@@ -163,7 +244,7 @@
                              x-transition:leave="transition ease-in duration-100 origin-center"
                              x-transition:leave-start="opacity-1 scale-100 translate-x-0 translate-y-0"
                              x-transition:leave-end="opacity-0 scale-[0.95] translate-x-2 -translate-y-2">
-                            <div class="flex justify-center items-center bg-white p-1.5 rounded-full">
+                            <div class="flex justify-center items-center bg-white bg-opacity-75 backdrop-blur p-1.5 rounded-full">
                                 <button class="inline-flex group"
                                         type="button"
                                         title="Close basket"
@@ -179,55 +260,69 @@
                                             <h2 class="font-semibold text-lg text-slate-600" x-dialog:title>
                                                 Basket
                                             </h2>
-                                            <p class="text-slate-600" x-text="`${basket.length} items`">
+                                            <p class="text-slate-600" x-text="`${basket.length} item(s)`">
                                             </p>
                                         </div>
-                                        <div class="flex flex-col mt-6">
+                                        {# Basket modal list #}
+                                        <div class="flex flex-col gap-y-1.5 mt-6">
                                             <template x-for="basketItem in basket">
-                                                <div class="flex gap-x-2 border-slate-300 p-2 border rounded-xl">
-                                                    <img class="rounded-lg h-16 aspect-square object-center object-cover"
-                                                         :src="basketItem.stripeProductObject.images[0]">
-                                                    <div class="flex flex-col flex-grow justify-between">
+                                                <div class="flex gap-x-2 border-slate-300 p-1.5 border rounded-xl">
+                                                    <img class="rounded-lg h-16 cursor-pointer aspect-square object-center object-cover"
+                                                         :src="basketItem.stripeProductObject.images[0]"
+                                                         x-on:click="$dialog.close(); productDetailOpen = true; productDetailId = basketItem.stripeProductObject.id"
+                                                         tabindex="0">
+                                                    <div class="flex flex-col gap-y-1 flex-grow justify-center items-start">
                                                         <h4 x-text="basketItem.stripeProductObject.name"
-                                                            class="font-semibold text-xs transition-[text-decoration-color] underline underline-offset-2 duration-100 ease-linear cursor-pointer decoration-transparent hover:decoration-slate-500"
+                                                            class="font-semibold text-xs transition-[text-decoration-color] underline underline-offset-2 duration-100 ease-linear cursor-pointer decoration-transparent text-slate-700 hover:decoration-slate-500"
                                                             x-on:click="$dialog.close(); productDetailOpen = true; productDetailId = basketItem.stripeProductObject.id"
                                                             tabindex="0">
                                                         </h4>
-                                                        <div class="flex flex-col items-start gap-y-[0.1875rem] mt-3">
-                                                        <p class="inline-flex gap-x-1 border-slate-400 px-1.5 border rounded-full font-semibold text-3xs text-center text-slate-500 tracking-wide">
-                                                            <span x-text="basketItem.stripeProductObject.type" class="uppercase"></span>
-                                                        </p>
-                                                        <p class="inline-flex gap-x-1 border-slate-400 px-1.5 border rounded-full font-semibold text-3xs text-center text-slate-500 tracking-wide">
-                                                            <span x-text="basketItem.stripePriceObject.type" class="uppercase"></span>
-                                                        </p>
+                                                        <div class="inline-flex gap-x-0.5 text-xs text-slate-500">
+                                                            <span x-text="basketItem.stripePriceObject.unit_amount"></span>
+                                                            <span x-text="basketItem.stripePriceObject.currency" class="uppercase"></span>
+                                                        </div>
                                                     </div>
-                                                    </div>
-                                                    <div class="flex items-center gap-x-2">
+                                                    <div class="flex items-center gap-x-4">
                                                         <div class="flex items-center">
-                                                            <button class="flex bg-slate-200 p-1 rounded aspect-square">
+                                                            <button type="button"
+                                                                    class="flex bg-slate-200 hover:bg-slate-300 disabled:bg-slate-100 p-1 rounded disabled:[&_span]:text-slate-400 transition duration-100 ease-linear aspect-square"
+                                                                    x-on:click="basketItem.quantity--"
+                                                                    :disabled="basketItem.quantity === 1">
                                                                 <span class="material-symbols-rounded font-semibold text-slate-600 text-xs leading-none">
                                                                     remove
                                                                 </span>
                                                             </button>
-                                                            <input value="1" class="w-12 text-center" type="number">
-                                                            <button class="flex bg-slate-200 p-1 rounded aspect-square">
+                                                            <input x-model="basketItem.quantity"
+                                                                   class="w-8 font-semibold text-center text-xs outline-none"
+                                                                   type="number">
+                                                            <button type="button"
+                                                                    class="flex bg-slate-200 hover:bg-slate-300 p-1 rounded transition duration-100 ease-linear aspect-square"
+                                                                    x-on:click="basketItem.quantity++">
                                                                 <span class="material-symbols-rounded font-semibold text-slate-600 text-xs leading-none">
                                                                     add
                                                                 </span>
                                                             </button>
                                                         </div>
-                                                        <div>
-                                                        </div>
+                                                        <button type="button"
+                                                                class="bg-slate-200 hover:bg-slate-300 mr-1.5 px-1.5 py-1.25 rounded font-semibold text-2xs text-slate-600 leading-none transition duration-100 ease-linear"
+                                                                x-on:click="basket = basket.filter(item => item.stripeProductObject.id !== basketItem.stripeProductObject.id)">
+                                                            Remove
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </template>
                                         </div>
                                     </div>
-                                    <div class="bottom-0 sticky flex justify-end">
-                                        <div class="bg-slate-200 p-1.5 rounded-full">
+                                    <div class="bottom-0 sticky">
+                                        <div class="flex justify-between items-center bg-slate-300 bg-opacity-50 backdrop-blur p-1.5 rounded-full">
+                                            <p class="inline-flex justify-center items-center gap-x-1 bg-slate-100 bg-opacity-50 backdrop-blur px-4 py-2 rounded-full font-semibold text-center text-slate-600">
+                                                <span>Total:</span>
+                                                <span x-text="basketTotalAmount"></span>
+                                                <span class="uppercase">usd</span>
+                                            </p>
                                             <button class="bg-slate-500 hover:bg-slate-600 px-5 py-2.5 rounded-full text-white transition-background duration-100 ease-linear focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                                     type="button"
-                                                    x-on:click="$dialog.close()">
+                                                    x-on:click="checkoutWithStripe($dialog)">
                                                 Checkout with Stripe
                                             </button>
                                         </div>
@@ -240,13 +335,13 @@
             </div>
         </div>
         {# Product list #}
-        <div class="relative z-[1] flex flex-1">
+        <div x-ref="content" class="relative z-[1] flex flex-1">
             <div class="flex flex-grow bg-white p-3.5 rounded-3xl">
-                <div class="flex-grow gap-4 grid grid-cols-3 lg:grid-cols-4 grid-flow-col auto-rows-max">
+                <div class="flex-grow gap-4 grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-max">
                     <template x-for="product in products">
                         <button type="button"
                                 x-on:click="productDetailOpen = true; productDetailId = product.stripeProductObject.id"
-                                class="flex flex-col justify-between gap-y-6 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-2xl transition duration-150 ease-linear">
+                                class="flex flex-col justify-between gap-y-6 border-slate-200 hover:border-slate-300 bg-slate-100 hover:bg-slate-200 p-1.5 border rounded-2xl transition duration-150 ease-linear group">
                             <div class="relative flex flex-col">
                                 <img class="rounded-xl w-full aspect-video object-center object-cover"
                                      :src="product.stripeProductObject.images[0]">
@@ -254,15 +349,15 @@
                                     <span x-text="product.stripePriceObject.unit_amount"></span>
                                     <span x-text="product.stripePriceObject.currency" class="uppercase"></span>
                                 </p>
-                                <h3 class="mt-4 text-left text-slate-600 text-xl transition-[text-decoration-color] underline-offset-4 duration-100 ease-linear decoration-transparent hover:decoration-slate-500 underline self-start"
+                                <h3 class="group-hover:text-slate-700 mt-4 text-left text-slate-600 text-xl transition-[text-decoration-color] underline underline-offset-4 duration-100 ease-linear decoration-transparent hover:decoration-slate-500 self-start"
                                     x-text="product.stripeProductObject.name">
                                 </h3>
                             </div>
                             <div class="relative flex flex-col items-start gap-y-1">
-                                <p class="inline-flex gap-x-1 border-slate-400 px-2 py-0.5 border rounded-full font-semibold text-2xs text-center text-slate-500">
+                                <p class="inline-flex gap-x-1 bg-white px-2 py-0.5 rounded-full font-semibold text-2xs text-center text-slate-500">
                                     <span x-text="product.stripeProductObject.type" class="uppercase"></span>
                                 </p>
-                                <p class="inline-flex gap-x-1 border-slate-400 px-2 py-0.5 border rounded-full font-semibold text-2xs text-center text-slate-500">
+                                <p class="inline-flex gap-x-1 bg-white px-2 py-0.5 rounded-full font-semibold text-2xs text-center text-slate-500">
                                     <span x-text="product.stripePriceObject.type" class="uppercase"></span>
                                 </p>
                             </div>
@@ -271,7 +366,8 @@
                 </div>
             </div>
             {# Product detail modal #}
-            <div class="absolute inset-3.5 overflow-hidden"
+            <div x-ref="productModal"
+                 class="z-[2] fixed inset-2 sm:inset-4 md:inset-6 lg:inset-8 overflow-hidden"
                  x-dialog
                  x-model="productDetailOpen"
                  style="display: none">
@@ -288,7 +384,7 @@
                          x-transition:leave="transition ease-in duration-100 origin-center"
                          x-transition:leave-start="opacity-1 scale-100"
                          x-transition:leave-end="opacity-0 scale-[0.975]">
-                        <div class="flex justify-center items-center bg-white p-1.5 rounded-full">
+                        <div class="flex justify-center items-center bg-white bg-opacity-75 backdrop-blur p-1.5 rounded-full">
                             <button class="inline-flex group"
                                     type="button"
                                     title="Close basket"
@@ -298,10 +394,10 @@
                             </button>
                         </div>
                         <div class="flex flex-col flex-grow justify-between bg-white rounded-2xl h-full overflow-y-auto">
-                            <div class="flex flex-row gap-x-8 p-4.5">
-                                <img class="rounded-lg w-1/2 aspect-video object-center object-cover"
+                            <div class="flex flex-col md:flex-row gap-x-8 p-4.5">
+                                <img class="rounded-lg md:w-1/2 md:max-w-[25rem] aspect-video md:aspect-square object-center object-cover"
                                      :src="productDetail?.stripeProductObject.images[0]">
-                                <div class="flex flex-col items-start w-1/2">
+                                <div class="flex flex-col items-start w-full">
                                     <h3 class="mt-4 text-3xl text-left text-slate-600"
                                         x-text="productDetail?.stripeProductObject.name"
                                         x-dialog:title>
@@ -315,22 +411,57 @@
                                 </div>
                             </div>
                             <div class="bottom-0 sticky p-4.5">
-                                <div class="flex justify-between items-center space-x-2 bg-slate-200 p-1.5 rounded-full">
-                                    <p class="inline-flex justify-center items-center gap-x-1 border-slate-400 px-4 py-2 border rounded-full font-semibold text-center text-slate-600">
+                                <div class="flex justify-between items-center space-x-2 bg-slate-300 bg-opacity-50 backdrop-blur p-1.5 rounded-full">
+                                    <p class="inline-flex justify-center items-center gap-x-1 bg-slate-100 bg-opacity-50 backdrop-blur px-4 py-2 rounded-full font-semibold text-center text-slate-600">
                                         <span x-text="productDetail?.stripePriceObject.unit_amount"></span>
                                         <span x-text="productDetail?.stripePriceObject.currency" class="uppercase"></span>
                                     </p>
-                                    <button class="bg-slate-600 hover:bg-slate-700 px-5 py-2.5 rounded-full text-white transition-background duration-100 ease-linear focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                                            type="button"
-                                            x-on:click="addBasketItem(productDetail?.stripeProductObject.id)">
-                                        Add to basket
-                                    </button>
+                                    <div class="flex">
+                                        <template x-if="!basket.some(item => item.stripeProductObject.id === productDetail?.stripeProductObject.id)">
+                                            <button class="bg-slate-500 hover:bg-slate-600 px-5 py-2.5 rounded-full text-white transition-background duration-100 ease-linear focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                                                    type="button"
+                                                    x-on:click="addBasketItem(productDetail?.stripeProductObject.id)">
+                                                Add to basket
+                                            </button>
+                                        </template>
+                                        <template x-if="basket.some(item => item.stripeProductObject.id === productDetail?.stripeProductObject.id)">
+                                            <div class="flex items-center bg-slate-500 hover:bg-slate-600 px-3 py-2.5 rounded-full text-white transition-background duration-100 ease-linear">
+                                                <button type="button"
+                                                        class="flex bg-slate-200 hover:bg-slate-300 p-1 rounded-full transition duration-100 ease-linear aspect-square"
+                                                        x-on:click="findBasketItem(productDetail?.stripeProductObject.id).quantity--"
+                                                        :disabled="findBasketItem(productDetail?.stripeProductObject.id).quantity < 1"
+                                                        x-show="findBasketItem(productDetail?.stripeProductObject.id).quantity > 1">
+                                                    <span class="material-symbols-rounded font-semibold text-slate-600 text-sm leading-none">
+                                                        remove
+                                                    </span>
+                                                </button>
+                                                <button type="button"
+                                                        class="flex bg-slate-200 hover:bg-slate-300 p-1 rounded-full transition duration-100 ease-linear aspect-square"
+                                                        x-on:click="basket = basket.filter(item => item.stripeProductObject.id !== productDetail?.stripeProductObject.id)"
+                                                        :disabled="findBasketItem(productDetail?.stripeProductObject.id).quantity !== 1"
+                                                        x-show="findBasketItem(productDetail?.stripeProductObject.id).quantity === 1">
+                                                    <span class="material-symbols-rounded font-semibold text-slate-600 text-sm leading-none">
+                                                        delete
+                                                    </span>
+                                                </button>
+                                                <input x-model="findBasketItem(productDetail?.stripeProductObject.id).quantity"
+                                                       class="bg-transparent w-16 font-semibold text-center outline-none"
+                                                       type="number">
+                                                <button type="button"
+                                                        class="flex bg-slate-200 hover:bg-slate-300 p-1 rounded-full transition duration-100 ease-linear aspect-square"
+                                                        x-on:click="findBasketItem(productDetail?.stripeProductObject.id).quantity++">
+                                                    <span class="material-symbols-rounded font-semibold text-slate-600 text-sm leading-none">
+                                                        add
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </body>
-</html>
+        </body>
+    </html>
