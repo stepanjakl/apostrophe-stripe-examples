@@ -222,7 +222,8 @@
                         x-on:click="basketOpen = true">
                     <span class="font-semibold text-slate-600 text-sm transition-[text-decoration-color] underline underline-2 underline-offset-4 duration-100 ease-linear decoration-transparent hover:decoration-slate-500"
                           x-text="`Basket (${basketTotalQuantity})`"></span>
-                    <span x-ref="basketIcon" class="group-hover:bg-slate-600 bg-slate-500 p-2 material-symbols-rounded rounded-full text-base text-white leading-none transition-background duration-100 ease-linear select-none">
+                    <span x-ref="basketIcon"
+                          class="group-hover:bg-slate-600 bg-slate-500 p-2 material-symbols-rounded rounded-full text-base text-white leading-none transition-background duration-100 ease-linear select-none">
                         shopping_basket
                     </span>
                 </button>
@@ -341,7 +342,7 @@
                     <template x-for="product in products">
                         <button type="button"
                                 x-on:click="productDetailOpen = true; productDetailId = product.stripeProductObject.id"
-                                class="flex flex-col justify-between gap-y-6 border-slate-200 hover:border-slate-300 bg-slate-100 hover:bg-slate-200 p-1.5 border rounded-2xl transition duration-150 ease-linear group">
+                                class="group flex flex-col justify-between gap-y-6 border-slate-200 hover:border-slate-300 bg-slate-100 hover:bg-slate-200 p-1.5 border rounded-2xl transition duration-150 ease-linear group">
                             <div class="relative flex flex-col">
                                 <img class="rounded-xl w-full aspect-video object-center object-cover"
                                      :src="product.stripeProductObject.images[0]">
@@ -353,13 +354,16 @@
                                     x-text="product.stripeProductObject.name">
                                 </h3>
                             </div>
-                            <div class="relative flex flex-col items-start gap-y-1">
-                                <p class="inline-flex gap-x-1 bg-white px-2 py-0.5 rounded-full font-semibold text-2xs text-center text-slate-500">
-                                    <span x-text="product.stripeProductObject.type" class="uppercase"></span>
-                                </p>
-                                <p class="inline-flex gap-x-1 bg-white px-2 py-0.5 rounded-full font-semibold text-2xs text-center text-slate-500">
-                                    <span x-text="product.stripePriceObject.type" class="uppercase"></span>
-                                </p>
+                            <div class="flex w-full items-end justify-between">
+                                <div class="relative flex flex-col items-start gap-y-1">
+                                    <p class="inline-flex gap-x-1 bg-white px-2 py-0.5 rounded-full font-semibold text-2xs text-center text-slate-500">
+                                        <span x-text="product.stripeProductObject.type" class="uppercase"></span>
+                                    </p>
+                                    <p class="inline-flex gap-x-1 bg-white px-2 py-0.5 rounded-full font-semibold text-2xs text-center text-slate-500">
+                                        <span x-text="product.stripePriceObject.type" class="uppercase"></span>
+                                    </p>
+                                </div>
+                                <span class="opacity-0 group-hover:opacity-100 bg-slate-500 hover:bg-slate-600 p-1.5 material-symbols-rounded rounded-full text-white text-xl leading-none [transition:opacity_150ms_linear,background-color_100ms_linear] select-none">expand_content</span>
                             </div>
                         </button>
                     </template>

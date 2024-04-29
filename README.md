@@ -4,8 +4,12 @@
     </h1>
     <p>
         <a aria-label="Apostrophe logo" href="https://v3.docs.apostrophecms.org">
-            <img src="https://img.shields.io/badge/MADE%20FOR%20APOSTROPHECMS-000000.svg?style=for-the-badge&logo=Apostrophe&labelColor=6516dd">
+            <img src="https://img.shields.io/badge/MADE%20FOR%20APOSTROPHECMS-000000.svg?style=for-the-badge&logo=Apostrophe&labelColor=6516DD">
         </a>
+        <a aria-label="Stripe logo" href="https://stripe.com">
+            <img src="https://img.shields.io/badge/STRIPE-000000.svg?style=for-the-badge&logo=Stripe&labelColor=635bFF&logoColor=FFFFFF">
+        </a>
+        <br>
         <a aria-label="Personal logo" href="https://stepanjakl.com">
             <img src="https://img.shields.io/badge/STEPANJAKL.COM%20-000000.svg?style=for-the-badge&labelColor=EED500&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+PHBhdGggZmlsbD0iIzAwMDAwMCIgZD0iTTAgMTV2NWgyMFY3LjVIMHY1aDE1LjA1VjE1SDBaTTIwIDBIMHY1aDIwVjBaIiAvPjwvc3ZnPg==">
         </a>
@@ -19,7 +23,7 @@
 
 <br>
 
-This module adds client-side integration examples for Stripe packages to page types in ApostropheCMS. [One example](https://github.com/stepanjakl/apostrophe-stripe-examples/tree/main/modules/stripe-examples/example-alpine-page) primarily uses [Alpine.js](https://alpinejs.dev/), while [the other](https://github.com/stepanjakl/apostrophe-stripe-examples/tree/main/modules/stripe-examples/example-htmx-page) uses [HTMX](https://htmx.org/) (WIP).
+These modules add client-side integration examples for Stripe packages to page types in ApostropheCMS. [One example](https://github.com/stepanjakl/apostrophe-stripe-examples/tree/main/modules/stripe-examples/example-alpine-page) primarily uses [Alpine.js](https://alpinejs.dev/), while [the other](https://github.com/stepanjakl/apostrophe-stripe-examples/tree/main/modules/stripe-examples/example-htmx-page) uses [HTMX](https://htmx.org/) (WIP).
 
 <br>
 
