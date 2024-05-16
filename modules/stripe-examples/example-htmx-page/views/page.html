@@ -30,13 +30,13 @@
                 }
             }
 
-            Handlebars.registerHelper('ifNotFirstIndex', function(index, options) {
+            /* Handlebars.registerHelper('ifNotFirstIndex', function(index, options) {
                 if (index !== 0) {
                     return options.fn(this);
                 } else {
                     return options.inverse(this);
                 }
-            });
+            }); */
         </script>
 
         <script defer>
@@ -44,7 +44,7 @@
 
             async function initializeStripe(priceId) {
 
-                console.log('-- priceId:', priceId);
+                /* console.log('-- priceId:', priceId);
 
                 const fetchClientSecret = async () => {
                     const response = await fetch("/api/v1/stripe/checkout/sessions/create", {
@@ -60,14 +60,105 @@
                     fetchClientSecret,
                 });
 
-                checkout.mount('#checkout');
+                checkout.mount('#checkout'); */
             }
         </script>
+
+        <script>
+            function waitNextTick() {
+                return new Promise(resolve => {
+                    setTimeout(resolve, 0);
+                });
+            }
+
+            let modalEl;
+
+            function initModal() {
+                const bodyEl = document.body;
+                const bodyElStyle = window.getComputedStyle(bodyEl);
+                const bodyPaddingTop = parseInt(bodyElStyle.paddingTop);
+                const bodyPaddingRight = parseInt(bodyElStyle.paddingRight);
+                const bodyPaddingBottom = parseInt(bodyElStyle.paddingBottom);
+                const bodyPaddingLeft = parseInt(bodyElStyle.paddingLeft);
+
+                const headerEl = document.querySelector('header');
+                const headerElRect = headerEl.getBoundingClientRect();
+                const headerElBottom = headerElRect.bottom;
+
+                modalEl = document.getElementById('modal');
+
+                modalEl.style.top = `${headerElBottom}px`;
+                modalEl.style.right = `${bodyPaddingRight}px`;
+                modalEl.style.bottom = `${bodyPaddingBottom}px`;
+                modalEl.style.left = `${bodyPaddingLeft}px`;
+                // modalEl.style.opacity = '0';
+            }
+
+            async function openModal() {
+                modalEl.classList.remove('hidden');
+                const modalContentHeight = modalEl.scrollHeight;
+                modalEl.style.height = '0';
+                await waitNextTick();
+                modalEl.animate([{
+                    height: '0'
+                }, {
+                    height: `${modalContentHeight}px`
+                }], {
+                    duration: 400,
+                    fill: 'forwards',
+                    easing: 'ease-out'
+                });
+            }
+
+            function closeModal() {
+                const modalContentHeight = modalEl.scrollHeight;
+
+                modalEl.animate([{
+                    height: `${modalContentHeight}px`,
+                }, {
+                    height: '0'
+                }], {
+                    duration: 300,
+                    fill: 'forwards',
+                    easing: 'ease-in'
+                }).onfinish = () => {
+                    modalEl.classList.add('hidden');
+                };
+            }
+
+            window.addEventListener('DOMContentLoaded', initModal);
+            window.addEventListener('resize', initModal);
+
+            window.addEventListener('DOMContentLoaded', () => {
+                setTimeout(openModal, 1000);
+                setTimeout(closeModal, 2000);
+            });
+        </script>
+
+        <style>
+            #products::-webkit-scrollbar {
+                height: 0.25rem;
+            }
+
+            #products::-webkit-scrollbar-thumb,
+            #products::-webkit-scrollbar-track {
+                border-radius: 0;
+            }
+
+            #products::-webkit-scrollbar-thumb {
+                background: rgb(161 161 170);
+                ;
+            }
+
+            #products::-webkit-scrollbar-track {
+                background: rgb(63 63 70);
+            }
+        </style>
     </head>
     <body class="flex flex-col flex-grow gap-y-4 sm:gap-y-6 md:gap-y-8 lg:gap-y-10 bg-zinc-950 p-4 sm:p-6 md:p-8 lg:p-10 h-full min-h-screen font-['Inter'] text-zinc-200 transition-opacity duration-200 ease-linear overscroll-none"
           hx-ext="client-side-templates">
         {# Header #}
-        <div class="top-4 sm:top-6 md:top-8 lg:top-10 z-[5] sticky flex items-end justify-between bg-zinc-950 pr-5 pt-3 pb-5 border-b-2 border-zinc-700">
+        <header class="top-4 sm:top-6 md:top-8 lg:top-10 z-[5] sticky flex items-end justify-between bg-zinc-950 pr-5 pt-3 pb-5 border-b md:border-b-2 border-zinc-700">
             <p class="text-xs text-zinc-300">
                 <!-- py-1.5 px-3.5 bg-zinc-900 border border-zinc-800 -->
                 Stripe Checkout - Example with HTMX + hyperscript
@@ -85,68 +176,70 @@
                     </path>
                 </svg>
             </div>
-        </div>
-    </div>
-    <!-- <button hx-post="/api/v1/stripe/checkout/sessions/create" hx-vals="{ line_items: [{ price: '{{ stripePriceObject.id }}', quantity: 1 }], success_url: '{{ global.locationHref }}', cancel_url: '{{ global.locationHref }}' }" hx-target="body" hx-swap="beforeend" handlebars-template="modal">
+        </header>
+        <!-- <button hx-post="/api/v1/stripe/checkout/sessions/create" hx-vals="{ line_items: [{ price: '{{ stripePriceObject.id }}', quantity: 1 }], success_url: '{{ global.locationHref }}', cancel_url: '{{ global.locationHref }}' }" hx-target="body" hx-swap="beforeend" handlebars-template="modal">
                                 {{ title }}
                             </button> -->
-    <div hx-ext="loading-states"
-         id="products"
-         class="transition-opacity duration-1000 ease-linear">
-        <div hx-get="/api/v1/stripe-products/product"
-             hx-trigger="load"
-             handlebars-template="list"
-             class="snap-x snap-mandatory overflow-x-scroll grid grid-flow-col auto-cols-[100%] sm:auto-cols-[calc(50%-1rem)] lg:auto-cols-[minmax(calc((100%/3)-(4rem/3)),100%)] gap-x-8 transition-opacity duration-300 ease-linear opacity-0"
-             data-loading-class="opacity-0">
-            <!-- lg:auto-cols-fr -->
-            <!-- flex flex-nowrap justify-start sm:justify-center -->
-            <!-- grid sm:auto-cols-[50%] md:auto-cols-[33.333%] -->
-            {% raw %}
-                <template id="list">
-                    {{#results}}
-                    <div class="snap-start">
-                        <!-- flex flex-shrink-0 w-full sm:w-1/2 md:w-1/3 -->
-                        <!-- {{#ifNotFirstIndex @index}} ml-2 sm:ml-4 md:ml-6 lg:ml-8{{/ifNotFirstIndex}} -->
-                        <div class="p-8 bg-zinc-900 border border-zinc-800">
-                            {{@index}}
-                            <h2>
-                                <div _="on click call initializeStripe('{{ stripePriceObject.id }}')">
-                                    Click Me!
+        <div hx-ext="loading-states">
+            <div id="products"
+                 hx-get="/api/v1/stripe-products/product"
+                 hx-trigger="load"
+                 handlebars-template="products-template"
+                 class="snap-x snap-mandatory pb-3 md:pb-5 overflow-x-auto grid grid-flow-col auto-cols-[100%] sm:auto-cols-[calc(50%-1rem)] lg:auto-cols-[minmax(calc((100%/3)-(4rem/3)),100%)] gap-x-8 transition-opacity duration-300 ease-linear opacity-0"
+                 data-loading-class="opacity-0">
+                <!-- lg:auto-cols-fr -->
+                <!-- flex flex-nowrap justify-start sm:justify-center -->
+                <!-- grid sm:auto-cols-[50%] md:auto-cols-[33.333%] -->
+                {% raw %}
+                    <template id="products-template">
+                        <!-- TODO only list services -->
+                        {{#results}}
+                        <div class="group snap-start cursor-pointer">
+                            <!-- flex flex-shrink-0 w-full sm:w-1/2 md:w-1/3 -->
+                            <div class="flex flex-col justify-between items-start p-8 bg-zinc-900 border-t md:border-t-2 border-zinc-800 group-hover:bg-zinc-800 group-hover:border-zinc-700 transition-background duration-150 ease-linear">
+                                <div class="flex flex-col">
+                                    <img class="w-32 aspect-square object-center object-cover"
+                                         src="{{ stripeProductObject.images }}">
+                                    <h3 class="group-hover:text-slate-200 text-zinc-300 mt-12 text-left text-xl transition-all underline underline-offset-4 duration-100 ease-linear decoration-transparent hover:decoration-zinc-200">
+                                        {{ stripeProductObject.name }}
+                                    </h3>
+                                    <p class="mt-6 group-hover:text-slate-200 text-zinc-300">
+                                        {{ stripeProductObject.description }}
+                                    </p>
+                                    <p class="group-hover:text-slate-200 text-zinc-300 mt-4">
+                                        <span>{{ stripePriceObject.unit_amount }}</span>
+                                        <span class="uppercase">{{ stripePriceObject.currency }}</span>
+                                    </p>
                                 </div>
-                            </h2>
-                            <p>
-                                Description: {{ stripeProductObject.description }}
-                            </p>
-                            <p>
-                                Price: ${{ stripePriceObject.unit_amount }}
-                            </p>
+                                <button _="on click call initializeStripe('{{ stripePriceObject.id }}')"
+                                        class="mt-12 py-2 px-4 bg-yellow-400 hover:bg-zinc-200 text-zinc-950 transition-all duration-150 ease-linear">
+                                    Subscribe <!-- if product then "Buy" if service "Subscribe" -->
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                {{/results}}
-            </template>
-        {% endraw %}
+                    {{/results}}
+                </template>
+            {% endraw %}
+        </div>
     </div>
-</div>
 
-{% raw %}
-    <template id="modal">
-        <div _="on closeModal add .hidden then wait for animationend then remove me"
-             class="fixed inset-0 z-5 bg-amber-400">
+    <div id="modal" class="fixed z-10 inset-0 bg-zinc-700 hidden">
+    </div>
+
+    <!-- <template id="modal">
+        <div _="on closeModal add .hidden then wait for animationend then remove me" class="fixed inset-0 z-5 bg-amber-400">
             <div class="modal-underlay" _="on click trigger closeModal">
             </div>
             <div class="modal-content">
                 <h1>
                     Modal Dialog
                 </h1>
-                {{ data }}
             </div>
             <button _="on click trigger closeModal">
                 Close
             </button>
         </div>
-    </div>
-</template>
-{% endraw %}
+    </template> -->
 
 </body>
 </html>
