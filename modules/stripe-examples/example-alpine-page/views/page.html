@@ -164,15 +164,18 @@
                                         price: item.stripePriceObject.id,
                                         quantity: parseInt(item.quantity)
                                     })),
+                                    ui_mode: 'hosted',
+                                    locale: 'en',
+                                    mode: 'payment',
                                     success_url: window.location.href,
                                     cancel_url: window.location.href
                                 })
                             })
 
                             if (response.ok) {
-                                const result = await response.text()
+                                const result = await response.json()
                                 console.log('-- checkoutWithStripe - success:', result)
-                                window.open(result, '_blank')
+                                window.open(result.url, '_blank')
                                 dialog.close()
                                 window.requestAnimationFrame(function() {
                                     _this.basket = []

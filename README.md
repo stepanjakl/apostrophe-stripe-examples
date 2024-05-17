@@ -23,13 +23,13 @@
 
 <br>
 
-These modules add client-side integration examples for Stripe packages to page types in ApostropheCMS. [One example](https://github.com/stepanjakl/apostrophe-stripe-examples/tree/main/modules/stripe-examples/example-alpine-page) primarily uses [Alpine.js](https://alpinejs.dev/), while [the other](https://github.com/stepanjakl/apostrophe-stripe-examples/tree/main/modules/stripe-examples/example-htmx-page) uses [HTMX](https://htmx.org/) (WIP).
+These modules add client-side integration examples for Stripe packages to page types in ApostropheCMS. [One example](https://github.com/stepanjakl/apostrophe-stripe-examples/tree/main/modules/stripe-examples/example-alpine-page) primarily uses [Alpine.js](https://alpinejs.dev/), while [the other](https://github.com/stepanjakl/apostrophe-stripe-examples/tree/main/modules/stripe-examples/example-htmx-page) uses [HTMX](https://htmx.org/).
 
 <br>
 
 The Stripe-ApostropheCMS packages used in these examples are:
-- [apostrophe-stripe-checkout](https://github.com/stepanjakl/apostrophe-stripe-checkout)
-- [apostrophe-stripe-products](https://github.com/stepanjakl/apostrophe-stripe-products)
+- [`apostrophe-stripe-checkout`](https://github.com/stepanjakl/apostrophe-stripe-checkout)
+- [`apostrophe-stripe-products`](https://github.com/stepanjakl/apostrophe-stripe-products)
 
 <br>
 
@@ -41,6 +41,17 @@ The Stripe-ApostropheCMS packages used in these examples are:
     <td><a href="./public/images/store-alpine-2.png"><img src="./public/images/store-alpine-2.png" alt="Store Alpine UI 2"></a></td>
     <td><a href="./public/images/store-alpine-3.png"><img src="./public/images/store-alpine-3.png" alt="Store Alpine UI 3"></a></td>
     <td><a href="./public/images/store-alpine-checkout.png"><img src="./public/images/store-alpine-checkout.png" alt="Stripe Checkout Alpine"></a></td>
+  </tr>
+</table>
+
+<br>
+
+## HTMX example screenshots
+
+<table>
+  <tr>
+    <td><a href="./public/images/store-htmx-1.png"><img src="./public/images/store-htmx-1.png" alt="Store HTMX UI 1"></a></td>
+    <td><a href="./public/images/store-htmx-2.png"><img src="./public/images/store-htmx-2.png" alt="Store HTMX UI 2"></a></td>
   </tr>
 </table>
 
@@ -137,9 +148,3 @@ module.exports = {
   }
 };
 ```
-
-<br>
-
-## TODOs (Limitations)
-
-- HTMX example

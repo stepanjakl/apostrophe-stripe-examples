@@ -1,6 +1,6 @@
 {
     "name": "@stepanjakl/apostrophe-stripe-examples",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "description": "Stripe Examples For ApostropheCMS",
     "keywords": [
         "apostrophe",
@@ -20,15 +20,15 @@
     "main": "index.js",
     "dependencies": {
         "eslint": "^8.x.x",
-        "eslint-config-apostrophe": "^4.3.0",
+        "eslint-config-apostrophe": "^4.x.x",
         "eslint-config-standard": "^17.1.0",
         "eslint-plugin-import": "^2.29.1",
         "eslint-plugin-mocha": "^10.4.3",
         "eslint-plugin-node": "^11.1.0",
         "eslint-plugin-promise": "^6.1.1",
-        "eslint-plugin-vue": "^9.25.0",
-        "stylelint": "^15.x.x",
-        "stylelint-config-apostrophe": "^3.0.2"
+        "eslint-plugin-vue": "^9.26.0",
+        "stylelint": "^16.x.x",
+        "stylelint-config-apostrophe": "^4.x.x"
     },
     "publishConfig": {
         "access": "public"
