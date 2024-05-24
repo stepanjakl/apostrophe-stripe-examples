@@ -23,7 +23,7 @@
 
 <br>
 
-These modules add client-side integration examples for Stripe packages to page types in ApostropheCMS. [One example](https://github.com/stepanjakl/apostrophe-stripe-examples/tree/main/modules/stripe-examples/example-alpine-page) primarily uses [Alpine.js](https://alpinejs.dev/), while [the other](https://github.com/stepanjakl/apostrophe-stripe-examples/tree/main/modules/stripe-examples/example-htmx-page) uses [HTMX](https://htmx.org/).
+These modules add client-side integration examples for Stripe packages to page types in ApostropheCMS. [One example](https://github.com/stepanjakl/apostrophe-stripe-examples/tree/main/modules/stripe-examples/example-alpine-page) primarily uses [Alpine.js](https://alpinejs.dev/), while [the other](https://github.com/stepanjakl/apostrophe-stripe-examples/tree/main/modules/stripe-examples/example-htmx-vanilla-js-page) is mostly written in Vanilla JS with sprinkles of HTMX/hyperscript.
 
 <br>
 
@@ -46,12 +46,12 @@ The Stripe-ApostropheCMS packages used in these examples are:
 
 <br>
 
-## HTMX example screenshots
+## HTMX + Vanilla JS example screenshots
 
 <table>
   <tr>
-    <td><a href="./public/images/store-htmx-1.png"><img src="./public/images/store-htmx-1.png" alt="Store HTMX UI 1"></a></td>
-    <td><a href="./public/images/store-htmx-2.png"><img src="./public/images/store-htmx-2.png" alt="Store HTMX UI 2"></a></td>
+    <td><a href="./public/images/store-htmx-vanilla-js-1.png"><img src="./public/images/store-htmx-vanilla-js-1.png" alt="Store HTMX + Vanilla JS UI 1"></a></td>
+    <td><a href="./public/images/store-htmx-vanilla-js-2.png"><img src="./public/images/store-htmx-vanilla-js-2.png" alt="Store HTMX + Vanilla JS UI 2"></a></td>
   </tr>
 </table>
 
@@ -95,7 +95,7 @@ require('apostrophe')({
     // Stripe Examples
     'stripe-examples': {},
     'stripe-examples/example-alpine-page': {},
-    'stripe-examples/example-htmx-page': {}
+    'stripe-examples/example-htmx-vanilla-js-page': {}
   }
 });
 ```
@@ -137,12 +137,12 @@ module.exports = {
         label: 'Home'
       },
       {
-        name: 'stripe-examples/example-alpine-page',
+        name: 'stripe-examples/example-alpine-js-page',
         label: 'Stripe - Example with Alpine.js'
       },
       {
-        name: 'stripe-examples/example-htmx-page',
-        label: 'Stripe - Example with </> htmx'
+        name: 'stripe-examples/example-htmx-vanilla-js-page',
+        label: 'Stripe - Example with HTMX + Vanilla JS'
       }
     ]
   }
