@@ -164,3 +164,15 @@ module.exports = {
   }
 };
 ```
+
+<br>
+
+## Separation of concerns
+
+The decision to keep the `products` and `checkout` packages separate aligns with the principle of separation of concerns. Stripe's API structure exemplifies this approach, offering distinct endpoints for Products and Checkout Sessions ([Stripe API Documentation](https://docs.stripe.com/api/)).
+
+Each package is designed to function independently, allowing for flexible integration. For instance, you can use the `stripe-checkout` package with your existing product dataset without requiring additional dependencies (as outlined [here](https://github.com/stepanjakl/apostrophe-stripe-products?tab=readme-ov-file#recommended-use)). This modular approach also facilitates the integration of other Stripe services into the Stripe/Apostrophe ecosystem without impacting existing functionality.
+
+Moreover, maintaining separate packages simplifies updates, maintenance, and troubleshooting, ensuring a more manageable and robust development process.
+
+Additional Stripe packages to support other Stripe services can be added upon request. For inquiries, please email: [stepan.jakl@outlook.com](stepan.jakl@outlook.com).
