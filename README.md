@@ -116,9 +116,25 @@ STRIPE_DASHBOARD_BASE_URL='https://dashboard.stripe.com'
 STRIPE_WEBHOOK_ENDPOINT_SECRET='whsec_xyz'
 ```
 
-[Read more on how to create a secret Stripe API key](https://docs.stripe.com/keys#create-api-secret-key)
+<br>
 
-The webhook signing secret is generated and displayed on the initial output of the `listen` command - more on this below.
+---
+
+To run these examples with the fully functional [`stripe-checkout`](https://github.com/stepanjakl/apostrophe-stripe-checkout) module, you'll need to set up event forwarding using the [Stripe CLI](https://docs.stripe.com/stripe-cli). This will send all Stripe events to your local webhook endpoint for testing and/or monitoring purposes.
+
+Here's how to do it:
+
+1. **Set up event forwarding with the Stripe CLI:** Run the following command to listen for specific events and forward them to your local endpoint:
+
+   ```zsh
+   stripe listen --events=payment_intent.succeeded --forward-to localhost:5000/api/v1/stripe-checkout/webhook
+   ```
+
+2. **Set the webhook signing secret:** The webhook signing secret is generated and displayed in the initial output of the listen command. Use this value for the `STRIPE_WEBHOOK_ENDPOINT_SECRET` environment variable.
+
+For more details on creating a secret Stripe API key, [read the documentation](https://docs.stripe.com/keys#create-api-secret-key).
+
+---
 
 <br>
 
