@@ -94,7 +94,7 @@ require('apostrophe')({
 
     // Stripe Examples
     'stripe-examples': {},
-    'stripe-examples/example-alpine-page': {},
+    'stripe-examples/example-alpine-js-page': {},
     'stripe-examples/example-htmx-vanilla-js-page': {}
   }
 });
@@ -111,10 +111,15 @@ APOS_RELEASE_ID='a4-boilerplate'
 APOS_MONGODB_URI='mongodb://localhost:27017/a4-boilerplate'
 
 STRIPE_KEY='sk_test_xyz'
+STRIPE_PUBLISHABLE_KEY='pk_test_xyz'
 STRIPE_TEST_MODE='false'
 STRIPE_DASHBOARD_BASE_URL='https://dashboard.stripe.com'
 STRIPE_WEBHOOK_ENDPOINT_SECRET='whsec_xyz'
 ```
+
+> The HTMX + Vanilla JS example renders Stripe's embedded checkout in the browser,
+> which requires a **publishable** key. It is read from `STRIPE_PUBLISHABLE_KEY`
+> and must belong to the same Stripe account as `STRIPE_KEY`.
 
 <br>
 

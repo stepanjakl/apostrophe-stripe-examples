@@ -11,12 +11,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp:opsz,wght,FILL,GRAD@24,400,1,200"
           rel="stylesheet">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/htmx.org@1.x.x"></script>
-    <script src="https://unpkg.com/htmx.org@1.x.x/dist/ext/client-side-templates.js"></script>
-    <script src="https://unpkg.com/htmx.org@1.x.x/dist/ext/loading-states.js"></script>
-    <script src="https://unpkg.com/hyperscript.org@0.x.x"></script>
-    <script src="https://unpkg.com/handlebars@4.x.x/dist/handlebars.min.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/client-side-templates.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/loading-states.js"></script>
+    <script src="https://unpkg.com/hyperscript.org@0.9.13/dist/_hyperscript.min.js"></script>
+    <script src="https://unpkg.com/handlebars@4.7.8/dist/handlebars.min.js"></script>
     <script src="https://js.stripe.com/v3/"></script>
 
     <style>
@@ -66,7 +66,11 @@
     </script>
 
     <script>
-		const stripe = Stripe('pk_test_51IOOwOE1ozL6C4r7Wo7PjgNrV8qpU0HPg3d6B3tcHXXOxqzMaC1ckvRam4ocKsjjXqpcCB3Vdz4WsB1BoSSeqy0400luYqQTaq') // pk_test_xyz
+		const stripe = Stripe('{{ apos.stripeExamples.stripePublishableKey() }}')
+
+		// Register a Handlebars `eq` helper so the product template can pick a
+		// button label based on the price type.
+		Handlebars.registerHelper('eq', (a, b) => a === b)
 
 		const waitNextTick = () => new Promise(resolve => setTimeout(resolve, 0))
 
@@ -105,6 +109,11 @@
 						redirect_on_completion: 'never'
 					})
 				})
+				if (!response.ok) {
+					const error = await response.json().catch(() => ({}))
+					throw new Error(error.message || 'Failed to create the checkout session')
+				}
+
 				const {
 					client_secret
 				} = await response.json()
@@ -220,7 +229,7 @@
                                 <div class="flex flex-col flex-grow items-start justify-between p-8 bg-zinc-900 border-t md:border-t-2 border-zinc-800 group-hover:bg-zinc-800 group-hover:border-zinc-700 transition-background duration-150 ease-linear">
                                     <div class="flex flex-col items-start">
                                         <img class="w-16 aspect-square object-cover object-center"
-                                             src="{{ stripeProductObject.images }}">
+                                             src="{{ stripeProductObject.images.[0] }}">
                                         <h3 class="mt-12 text-xl text-left text-zinc-300 group-hover:text-zinc-200 transition-all duration-150 ease-linear underline underline-offset-4 decoration-transparent hover:decoration-zinc-200">
                                             {{ stripeProductObject.name }}
                                         </h3>
@@ -242,7 +251,7 @@
                                     </div>
                                     <button tabindex="0"
                                             class="mt-12 px-4 py-2 text-zinc-950 bg-yellow-400 hover:bg-zinc-200 active:scale-90 focus:scale-90 transition-[color,background-color,transform] duration-150 ease-linear">
-                                        Subscribe
+                                        {{#if (eq stripePriceObject.type 'recurring')}}Subscribe{{else}}Buy{{/if}}
                                     </button>
                                 </div>
                             </div>

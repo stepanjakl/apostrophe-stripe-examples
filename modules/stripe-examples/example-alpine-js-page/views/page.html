@@ -5,12 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@alpinejs/persist@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script src="https://unpkg.com/@alpinejs/persist@3.14.1/dist/cdn.min.js" defer></script>
     <script src="https://unpkg.com/@alpinejs/ui@3.13.5-beta.0/dist/cdn.min.js"
             defer></script>
-    <script src="https://unpkg.com/@alpinejs/focus@3.x.x/dist/cdn.min.js" defer></script>
-    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://unpkg.com/@alpinejs/focus@3.14.1/dist/cdn.min.js" defer></script>
+    <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
 
     <script defer>
 		tailwind.config = {
@@ -117,7 +117,16 @@
 					this.$refs.productModal.style.top = `${window.scrollY + this.$refs.content.getBoundingClientRect().y}px`
 				},
 				async fetchProducts() {
-					this.products = (await (await fetch('/api/v1/stripe-products/product')).json()).results
+					try {
+						const response = await fetch('/api/v1/stripe-products/product')
+						if (!response.ok) {
+							throw new Error('Failed to fetch products')
+						}
+						this.products = (await response.json()).results
+					} catch (error) {
+						console.error('-- fetchProducts - error:', error)
+						this.products = []
+					}
 				},
 				productDetailId: null,
 				productDetailOpen: false,
@@ -277,7 +286,7 @@
                                                 <template x-for="basketItem in basket">
                                                     <div class="flex gap-x-2 border-slate-300 p-1.5 border rounded-xl">
                                                         <img class="rounded-lg h-16 cursor-pointer aspect-square object-center object-cover"
-                                                             :src="basketItem.stripeProductObject.images[0]"
+                                                             :src="basketItem.stripeProductObject.images?.[0]"
                                                              x-on:click="$dialog.close(); productDetailOpen = true; productDetailId = basketItem.stripeProductObject.id"
                                                              tabindex="0">
                                                         <div class="flex flex-col gap-y-1 flex-grow justify-center items-start">
@@ -354,7 +363,7 @@
                                     class="group flex flex-col justify-between gap-y-6 border-slate-200 hover:border-slate-300 bg-slate-100 hover:bg-slate-200 p-1.5 border rounded-2xl transition duration-150 ease-linear group">
                                 <div class="relative flex flex-col">
                                     <img class="rounded-xl w-full aspect-video object-center object-cover"
-                                         :src="product.stripeProductObject.images[0]">
+                                         :src="product.stripeProductObject.images?.[0]">
                                     <p class="inline-flex top-0 right-0 absolute gap-x-1 bg-slate-100 bg-opacity-50 backdrop-blur mt-2 mr-2 px-2.5 py-1 rounded-full font-semibold text-center text-slate-800 text-xs text-opacity-80">
                                         <span x-text="product.stripePriceObject.unit_amount"></span>
                                         <span x-text="product.stripePriceObject.currency" class="uppercase"></span>
@@ -409,7 +418,7 @@
                             <div class="flex flex-col flex-grow justify-between bg-white rounded-2xl h-full overflow-y-auto">
                                 <div class="flex flex-col md:flex-row gap-x-8 p-4.5">
                                     <img class="rounded-lg md:w-1/2 md:max-w-[25rem] aspect-video md:aspect-square object-center object-cover"
-                                         :src="productDetail?.stripeProductObject.images[0]">
+                                         :src="productDetail?.stripeProductObject.images?.[0]">
                                     <div class="flex flex-col items-start w-full">
                                         <h3 class="mt-4 text-3xl text-left text-slate-600"
                                             x-text="productDetail?.stripeProductObject.name"

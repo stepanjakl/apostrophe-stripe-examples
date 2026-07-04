@@ -1,0 +1,5 @@
+{
+    "dependencies": {
+        "apostrophe": "4.*.*"
+    }
+}

@@ -1,3 +1,3 @@
 module.exports = {
-    extend: '@apostrophecms/page-type'
-}
+  extend: '@apostrophecms/page-type'
+};
